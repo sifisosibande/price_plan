@@ -1,0 +1,45 @@
+GET http://localhost:3030/api/price_plans/
+
+
+###
+POST http://localhost:3030/api/price_plan/create
+Content-Type: application/json
+
+{
+    "plan_name": "mtn",
+    "sms_price": 1.2,
+    "call_price": 3.4
+}
+
+
+###
+POST http://localhost:3030/api/price_plan/update
+Content-Type: application/json
+
+{
+    "plan_name": "premium",
+    "sms_price": 1.4,
+    "call_price": 3.2,
+    "id": 4
+}
+
+
+###
+POST http://localhost:3030/api/price_plan/delete
+Content-Type: application/json
+
+{
+    "plan_name": "standard"
+}
+
+###
+
+POST  http://localhost:3030/api/phonebill
+Content-Type: application/json
+
+{
+    "plan_name": "sms 101",
+    "actions": "call,sms,call"
+}
+
+

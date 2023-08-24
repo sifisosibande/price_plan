@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Plan Management</title>
+    <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
+        crossorigin="anonymous"></script>
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"> -->
+    <script src="app.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+
+
+</head>
+<body>
+
+    <div x-data="pricePlanWithAPIWidget" x-init="init">
+    
+    <template x-if="!show"> 
+        <div class="text-center my-5 py-5 bg-light">
+            <h1>Callec' Call Price Plan</h1>
+        </div>
+        </template>
+        
+        <div class="text-center" x-show="!show">
+            <button x-on:click="show = !show" class="btn btn-warning fw-bold">Show Price Plans</button>
+        </div>
+            <!-- All Price Plans -->
+            <div x-show="show">
+            <section id="list_plans" class="bg-info-subtle p-2 my-2">
+                <div class="text-center"> 
+                </div>
+                <table class="table table-hover table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Price Plan ID</th>
+                            <th>Price Plan</th>
+                            <th>SMS Prices</th>
+                            <th>Call Prices</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="plan in pricePlans">
+                            <tr>
+                                <td x-text="plan.id"></td>
+                                <td x-text="plan.plan_name"></td>
+                                <td x-text="'R' + plan.sms_price"></td>
+                                <td x-text="'R' + plan.call_price"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+        
+        <div class="text-center" x-show="show">
+            <button x-on:click="show = !show" class="btn btn-warning fw-bold">Hide Price Plans</button>
+        </div>
+        <!-- PRICE PLAN CALCULATION -->
+
+        <section id="calculate_plan" class="py-2">
+            <h1>Price Plan Calculation</h1>
+            <p>If you do not like the plans above, create one and then use the calculator below. Remember that the input for call and sms should be separated by a comma and Call and sms should always be in lowercase.</p>
+    
+            <div>
+                <label for="plan-input">Price Plan:</label>
+                <input type="text" class="form-control" id="plan-input" placeholder="Type price plan" x-model="planName">
+                <br>
+                <label for="product-input">Calls and Sms made:</label>
+                <br>
+                <textarea name="product-input" class="form-control" id="product-input" cols="50"
+                    placeholder="calls and/or sms" x-model="inputAction"></textarea>
+                <br>
+                <button class="btn btn-success btn-hover fw-bold"
+                    x-on:click="totalPhoneBill(planName, inputAction)">Calculate</button>
+                <span class="success-message fw-bold" x-text="message"></span>
+                <span class="message fw-bold" x-text="errorMessage"></span>
+            </div>
+
+        </section>
+ 
+
+    <!-- Create New Price Plan -->
+
+        <section id="create_plan" class="py-2">
+            <h1>Create a Price Plan</h1>
+            <div class="price-plan-form">
+                <p x-text="planDetails"></p>
+                <label for="new-plan-input">Price Plan:</label>
+                <input type="text" placeholder="New Price plan" class="form-control" name="new-plan-input"
+                    id="new-plan-input" x-model="newPlan">
+                <br>
+                <label for="new-plan-sms">SMS Price:</label>
+                <div class="input-group mb-3">
+                    <span class="input-group-text">R</span>
+                    <input type="number" name="new-plan-sms" class="form-control" placeholder="sms price" id="new-plan-sms"
+                        x-model="newPlanSMS">
+                </div>
+                <br>
+                <label for="new-plan-call">Call Price:</label>
+                <div class="input-group mb-3">
+                    <span class="input-group-text">R</span>
+                    <input type="number" name="new-plan-call" class="form-control" placeholder="call price"
+                        id="new-plan-call" x-model="newPlanCall">
+                </div>
+                <br>
+                <button class="btn btn-dark btn-hover fw-bold"
+                    x-on:click="createPricePlan(newPlan, newPlanSMS, newPlanCall)">Create Plan</button>
+                <span class="success-message fw-bold price-plan-message" x-text="planMessage"></span>
+                <span class="message fw-bold price-plan-message" x-text="newPricePlanError"></span>
+
+            </div>
+        </section>
+
+    <!-- Update Price Plan -->
+
+    <section id="update_plan" class="py-2">
+        <h1>Update a Price Plan</h1>
+        <div class="update-plan-form">
+            <p x-text="updateDetails"></p>
+            <label for="updatePricePlan-input">Price Plan:</label>
+            <input type="text" name="updatePricePlan-input" class="form-control" placeholder="Price Plan"
+                id="updatePricePlan-input" x-model="updatePlan">
+            <br>
+            <label for="updateSMSCost-input">SMS Price:</label>
+            <div class="input-group mb-3">
+                <span class="input-group-text">R</span>
+                <input type="number" name="updateSMSCost-input" class="form-control" placeholder="sms price"
+                    id="updateSMSCost-input" x-model="updateSMSCost">
+            </div>
+            <br>
+            <label for="updateCallCost-input">Call Price:</label>
+            <div class="input-group mb-3">
+                <span class="input-group-text">R</span>
+                <input type="number" name="updateCallCost-input" class="form-control" placeholder="call price"
+                    id="updateCallCost-input" x-model="updateCallCost">
+            </div>
+            <br>
+            <label for="updateID-input">Price Plan ID:</label>
+            <input type="number" name="updateID-input" class="form-control" id="updateID-input"
+                placeholder="price plan ID" x-model="updateID">
+            <br>
+            <button class="btn btn-warning btn-hover fw-bold"
+                x-on:click="updatePricePlan(updatePlan, updateSMSCost, updateCallCost, updateID)">Update Price
+                Plan</button>
+            <span class="success-message fw-bold update-plan-message" x-text="updateMessage"></span>
+            <span class="message fw-bold update-plan-message" x-text="updateError"></span>
+
+        </div>
+    </section>
+    
+    
+
+    <!-- Delete Price Plan -->
+
+            <section id="delete_plan" class="py-2">
+                <h1>Delete a Price Plan</h1>
+                <div class="delete-plan-form">
+                    <label for="delete-plan-input">Price Plan:</label>
+                    <input type="text" name="delete-plan-input" class="form-control" id="delete-plan-input"
+                        placeholder="Type price plan" x-model="deletePlan">
+                    <br>
+                    <button class="btn btn-danger fw-bold btn-hover" x-on:click="deletePricePlan(deletePlan)">Delete
+                        Plan</button>
+                    <span class="success-message fw-bold delete-plan-message" x-text="deleteMessage"></span>
+
+                </div>
+            </section>
+    
+
+
+</div>
+
+
+<section id="about_us" class="py-2">
+    <h1>About Us</h1>
+    <p>Welcome to Callec' Call Price Plan Management! We are dedicated to providing you with a user-friendly platform for managing your price plans and calculating your phone bills. Our goal is to simplify the process of handling your telecommunications costs, making it easier for you to keep track of your expenses. Whether you're an individual or a business, our tools are designed to help you effectively manage your communication expenses. Feel free to explore our features and make the most of our services.</p>
+</section>
+<section id="contact_us" class="py-2">
+    <h1>Contact Us</h1>
+    <p>If you have any questions or feedback, feel free to get in touch with us:</p>
+    <ul class="social-icons">
+        <li><a href="#"><i class="fab fa-facebook"></i></a>Callec' Call</li>
+        <li><a href="#"><i class="fab fa-twitter"></i></a>@Callec'_Call</li>
+        <li><a href="#"><i class="fab fa-instagram"></i></a>Callec' Call</li>
+        <!-- Add more social media icons as needed -->
+    </ul>
+    
+</section>
+
+
+
+</body>
+</html>
